@@ -1,0 +1,122 @@
+#include <iostream>
+#include <vector>
+using namespace std;
+
+class Appliance {
+private:
+	string name;
+	double powerConsumption;
+public:
+	Appliance(const string& n, double pc)
+		: name{ n }, powerConsumption{ pc } {}
+	double getPowerConsumption(double hours) const {
+		return powerConsumption * hours;
+	}
+	string getName() const {
+		return name;
+	}
+	virtual void displayInfo() const = 0;
+	virtual double getCost(double hours) const = 0;
+	virtual ~Appliance() {};
+};
+
+class Fan : public Appliance
+{
+private:
+	double powerConsumption;
+public:
+	Fan(double pc);
+	virtual void displayInfo() const override;
+	virtual double getCost(double hours) const override;
+};
+Fan::Fan(double pc) : Appliance{ "선풍기", pc } { powerConsumption = pc; }
+void Fan::displayInfo() const {
+	cout << "- " << getName() << " (시간 x 전력 소비량)" << endl;
+}
+double Fan::getCost(double hours) const { return getPowerConsumption(hours);  }
+
+class AirController : public Appliance
+{
+private:
+	double powerConsumption;
+	double tax;
+public:
+	AirController(double powerConsumption, double tax);
+	virtual void displayInfo() const override;
+	virtual double getCost(double hours) const override;
+};
+AirController::AirController(double pc, double t) : Appliance{ "에어컨", pc }, tax{ t } { powerConsumption = pc; }
+void AirController::displayInfo() const {
+	cout << "- " << getName() << " (시간 x 전력 소비량 + 세금)" << endl;
+}
+double AirController::getCost(double hours) const { return getPowerConsumption(hours) * (tax + 1); }
+
+class Oven : public Appliance
+{
+private:
+	double powerConsumption;
+	int leastFee = 100;
+public:
+	Oven(double pc);
+	virtual void displayInfo() const override;
+	virtual double getCost(double hours) const override;
+};
+Oven::Oven(double pc) : Appliance{ "오븐", pc } { powerConsumption = pc; }
+void Oven::displayInfo() const {
+	cout << "- " << getName() << " (시간 x 전력 소비량, 최소 100원)" << endl;
+}
+double Oven::getCost(double hours) const { 
+	double result = getPowerConsumption(hours);
+	if (result < leastFee)
+		return leastFee;
+	else
+		return result;
+}
+
+void showAppliances(Appliance* appliances[]);
+
+int main()
+{
+	Appliance* appliances[3];
+
+	double fanPowerConsumption;
+	double airControllerPowerConsumption;
+	double ovenPowerConsumption;
+	double airConTax;
+
+	cout << "선풍기의 시간당 전력 소비량을 입력하세요: ";
+	cin >> fanPowerConsumption;
+	appliances[0] = new Fan{ fanPowerConsumption };
+
+	cout << "에어컨의 시간당 전력 소비량을 입력하세요: ";
+	cin >> airControllerPowerConsumption;
+	cout << "에어컨의 세금 비율을 실수로 입력하세요: ";
+	cin >> airConTax;
+	appliances[1] = new AirController{ airControllerPowerConsumption, airConTax };
+
+	cout << "오븐의 시간당 전력 소비량을 입력하세요: ";
+	cin >> ovenPowerConsumption;
+	appliances[2] = new Oven{ ovenPowerConsumption };
+
+	cout << endl << "==== 가전제품 전기세 계산 프로그램 ====" << endl;
+	showAppliances(appliances);
+
+	cin.ignore();
+
+	for (Appliance* app : appliances) {
+		int hour;
+		cout << endl << app->getName() << "의 사용 시간을 입력하세요: ";
+		cin >> hour;
+		cout << "[총 소비 전력] " << app->getPowerConsumption(hour) << "kWh, [총 비용] " << app->getCost(hour) << "원" << endl;
+	}
+
+	for (Appliance* app : appliances)
+		delete app;
+}
+
+void showAppliances(Appliance* appliances[]) {
+	cout << "가전제품 목록 (전기세 정보, 원)" << endl;
+	for (int i{ 0 }; i < 3; i++)
+		appliances[i]->displayInfo();
+	cout << endl;
+}
