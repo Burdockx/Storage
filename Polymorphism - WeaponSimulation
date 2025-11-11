@@ -1,0 +1,115 @@
+#include <iostream>
+using namespace std;
+
+class Weapon
+{
+private:
+	int damage;
+	string type;
+protected:
+	int getDamage() const { return damage; }
+public:
+	Weapon(int damage, const string& type)
+		: damage{ damage }, type{ type } {
+	}
+	string getType() const { return type; }
+	virtual void useWeapon() const = 0;
+	virtual Weapon* clone() const = 0;
+	virtual ~Weapon() {}
+};
+
+class Knife : public Weapon
+{
+public:
+	Knife(int damage);
+	void useWeapon() const override;
+	Weapon* clone() const override;
+	~Knife();
+};
+Knife::Knife(int damage) : Weapon{ damage, "Knife"} { }
+void Knife::useWeapon() const {
+	cout << "Attacking with a knife! Damage: " << getDamage() << endl;
+}
+Weapon* Knife::clone() const { return new Knife{ *this }; }
+Knife::~Knife() { cout << "Knife destroyed" << endl; }
+
+
+class Gun : public Weapon
+{
+private:
+	int damage;
+	string type;
+public:
+	Gun(int damage);
+	void useWeapon() const override;
+	Weapon* clone() const override;
+	~Gun();
+};
+Gun::Gun(int damage) : Weapon{ damage, "Gun" } {}
+void Gun::useWeapon() const {
+	cout << "Shooting with a gun! Damage: 25" << endl;
+}
+Weapon* Gun::clone() const { return new Gun{ *this }; }
+Gun::~Gun() { cout << "Gun destroyed" << endl; }
+
+
+class Character
+{
+private:
+	Weapon* weapon;
+public:
+	Character(Weapon* weapon = nullptr)
+		: weapon{ weapon } {}
+	Character(const Character& other);
+	void setWeapon(Weapon* weapon);
+	void attack() const;
+	~Character();
+};
+Character::Character(const Character& other) 
+	: weapon{ other.weapon ? other.weapon->clone() : nullptr } {}
+void Character::setWeapon(Weapon* weapon) {
+	cout << weapon->getType() << " equipped!" << endl;
+	if (this->weapon)
+		delete this->weapon;
+	this->weapon = weapon;
+}
+void Character::attack() const {
+	if (weapon)
+		weapon->useWeapon();
+	else
+		cout << "No weapon set!" << endl;
+}
+Character::~Character() { delete weapon; }
+
+int main()
+{
+	cout << "=== player1.attack() ===" << endl;
+	Character player1{ new Knife{15} };
+	player1.attack();
+	player1.setWeapon( new Gun{ 25 });
+	player1.attack();
+
+	cout << "\n=== player2.attack() ===" << endl;
+	Character player2{ player1 };
+	player2.attack();
+
+	cout << "\n=== player3.attack() ===" << endl;
+	cout << "Choose your weapon for player3:" << endl
+		<< "1. Knife" << endl
+		<< "2. Gun" << endl
+		<< "Enter your choice: ";
+	int choice;
+	cin >> choice;
+	Character player3;
+	if (choice == 1)
+		player3.setWeapon(new Knife{ 15 });
+	else if (choice == 2)
+		player3.setWeapon(new Gun{ 25 });
+	player3.attack();
+
+	cout << "\n=== player4.attack() ===" << endl;
+	Character player4;
+	player4.attack();
+
+	cout << "\n=== End of Demonstration ===" << endl;
+}
