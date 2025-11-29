@@ -1,0 +1,136 @@
+#include <iostream>
+#include <vector>
+using namespace std;
+
+class IVehicle {
+protected:
+	string vehicleID;
+public:
+	IVehicle(const string& id);
+	virtual ~IVehicle();
+	virtual void drive() const = 0;
+	virtual void reportStatus() const = 0;
+};
+IVehicle::IVehicle(const string& id) : vehicleID{ id } {
+
+}
+IVehicle::~IVehicle() {}
+
+class TourTram : public IVehicle {
+private:
+	int passengerCapacity;
+public:
+	TourTram(const string& id, int capacity);
+	void drive() const override;
+	void reportStatus() const override;
+	~TourTram();
+};
+TourTram::TourTram(const string& id, int capacity) : IVehicle{ id }, passengerCapacity{ capacity } {}
+void TourTram::drive() const {
+	cout << "[Tram: " << vehicleID << "]이 '사파리'코스를 운행합니다.\n";
+}
+void TourTram::reportStatus() const {
+	cout << "[Tram: " << vehicleID << "]상태: 운행 중 (탑승 인원: " << passengerCapacity << "명)\n";
+}
+TourTram::~TourTram() {
+	cout << "'class TourTram' 타입 객체 해제\n";
+}
+
+
+class JeepExplorer : public IVehicle {
+private:
+	int enginePower;
+public:
+	JeepExplorer(const string& id, int ep);
+	void drive() const override;
+	void reportStatus() const override;
+	void activate4WD() const;
+	~JeepExplorer();
+};
+JeepExplorer::JeepExplorer(const string& id, int ep) : IVehicle{ id }, enginePower{ ep } {}
+void JeepExplorer::drive() const {
+	cout << "[Jeep: " << vehicleID << "]이 '오프로드'코스를 운행합니다.\n";
+}
+void JeepExplorer::reportStatus() const {
+	cout << "[Jeep: " << vehicleID << "]상태: 점검 중 (엔진 마력: " << enginePower << ")\n";
+}
+void JeepExplorer::activate4WD() const {
+	cout << "[Jeep: " << vehicleID << "] 4륜 구동 활성화!\n";
+}
+JeepExplorer::~JeepExplorer() {
+	cout << "'class JeepExplorer' 타입 객체 해제\n";
+}
+
+class SupplyTruck : public IVehicle {
+private:
+	int cargoWeight;
+public:
+	SupplyTruck(const string& id, int weight);
+	void drive() const override;
+	void reportStatus() const override;
+	void unloadCargo() const;
+	~SupplyTruck();
+};
+SupplyTruck::SupplyTruck(const string& id, int weight) : IVehicle{ id }, cargoWeight{ weight } {}
+void SupplyTruck::drive() const {
+	cout << "[Truck: " << vehicleID << "]이 '물류창고'로 운행합니다.\n";
+}
+void SupplyTruck::reportStatus() const {
+	cout << "[Truck: " << vehicleID << "]상태: 적재 중 (화물: " << cargoWeight << "kg)\n";
+}
+void SupplyTruck::unloadCargo() const {
+	cout << "[Truck: " << vehicleID << "] 화물을 하역합니다.\n";
+}
+SupplyTruck::~SupplyTruck() {
+	cout << "'class SupplyTruck' 타입 객체 해제\n";
+}
+
+int main()
+{
+	vector<IVehicle*> vehicles;
+
+	int count;
+	cout << "총 몇 대의 차량을 등록하시겠습니까?: ";
+	cin >> count;
+	cout << "차량 타입 (T: 트램, J: 지프, S: 트럭)\n";
+	for (int i{ 0 }; i < count; i++) {
+		char type;	string id;
+		cout << "[" << i + 1 << "/3] 차량 타입과 ID를 입력하세요: ";
+		cin >> type >> id;
+		switch (type) {
+		case 'T':
+			int capacity;
+			cout << " ->트램의 최대 탑승 인원을 입력하세요: ";
+			cin >> capacity;
+			vehicles.emplace_back(new TourTram{ id, capacity });
+			break;
+		case 'J':
+			int ep;
+			cout << " ->지프의 엔진 마력을 입력하세요: ";
+			cin >> ep;
+			vehicles.emplace_back(new JeepExplorer{ id, ep });
+			break;
+		case 'S':
+			int w;
+			cout << " ->트럭의 화물 적재량(kg)을 입력하세요: ";
+			cin >> w;
+			vehicles.emplace_back(new SupplyTruck{ id, w });
+			break;
+		}
+	}
+
+	cout << "\n\n--- 인하 동물원 차량 관제 시작 ---\n";
+	for (IVehicle* vehicle : vehicles) {
+		vehicle->drive();
+		vehicle->reportStatus();
+		if (JeepExplorer* v = dynamic_cast<JeepExplorer*>(vehicle))
+			v->activate4WD();
+		if (SupplyTruck* v = dynamic_cast<SupplyTruck*>(vehicle))
+			v->unloadCargo();
+	}
+
+	cout << endl << endl;
+	cout << "--- 차량 폐차 처리 (메모리 해제) ---\n";
+	for (IVehicle* vehicle : vehicles)
+		delete vehicle;
+}
